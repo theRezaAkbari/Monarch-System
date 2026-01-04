@@ -1,7 +1,7 @@
 from database import db
 from models.user import User
 from werkzeug.security import generate_password_hash, check_password_hash
-
+from flask_jwt_extended import create_access_token
 
 def register_user(data):
     existing_user = User.query.filter_by(email=data["email"]).first()
@@ -15,7 +15,7 @@ def register_user(data):
         password_hash=generate_password_hash(data["password"])
 
     )
-
+    
     db.session.add(user)
     db.session.commit()
 
@@ -23,8 +23,14 @@ def register_user(data):
 
 
 def authenticate_user(data):
-    user = User.query.filter_by(email=data["email"]).first()
-    if not user or not check_password_hash(user.password, data["password"]):
-        return {"message": "Invalid credentials"}, 401
+    email = data["email"]
+    password = data["password"]
 
-    return user
+    user = User.query.filter_by(email=email).first()
+
+    if not user or not user.check_password(password):
+        return None
+
+    token = create_access_token(identity=str(user.id))  # ✅ STRING
+    return token
+

@@ -14,20 +14,10 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
-    user = authenticate_user(data)
+    data = request.json
+    token = authenticate_user(data)
 
-    if isinstance(user, tuple):
-        return jsonify(user[0]), user[1]
+    if not token:
+        return {"message": "Invalid email or password"}, 401
 
-    access_token = create_access_token(identity=user.id)
-
-    return jsonify({
-        "access_token": access_token,
-        "user": {
-            "id": user.id,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "email": user.email
-        }
-    }), 200
+    return {"access_token": token}
